@@ -2,6 +2,7 @@
     <string name="app_name">CabiShop</string>
     <string name="shop_title">CabiShop</string>
     <string name="shop_button">Add to cart</string>
+    <string name="shop_error_text">An error occurred</string>
     <string name="shop_promotion_title">Product Promotion</string>
     <string name="cart_button">Go to cart</string>
     <string name="cart_view_title_text">Cart</string>

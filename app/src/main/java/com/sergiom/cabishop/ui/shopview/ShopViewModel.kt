@@ -57,8 +57,10 @@ class ShopViewModel @Inject constructor(
                     _shopData.value = result.data
                     _loading.value = false
                 }
-                is DataState.Error -> _error.value = result.error.toString()
-                else -> {}
+                is DataState.Error -> {
+                    _loading.value = false
+                    _error.value = result.error.toString()
+                }
             }
         }
     }
@@ -69,8 +71,9 @@ class ShopViewModel @Inject constructor(
                 is DataState.Success -> {
                     _discounts.value = result.data
                 }
-                is DataState.Error -> _error.value = result.error.toString()
-                else -> {}
+                is DataState.Error -> {
+                    _error.value = result.error.toString()
+                }
             }
         }
     }

@@ -62,6 +62,7 @@ class ShopFragment : Fragment(), ShopViewAdapter.AddToCartListener {
         }
 
         viewModel.error.observe(viewLifecycleOwner) {
+            binding.errText.visibility = View.VISIBLE
             Toast.makeText(context, "ERROR: $it", Toast.LENGTH_LONG).show()
         }
 

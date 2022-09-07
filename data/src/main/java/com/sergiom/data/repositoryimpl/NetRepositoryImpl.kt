@@ -6,7 +6,6 @@ import com.sergiom.data.model.ShopDataModel
 import com.sergiom.data.net.RestClient
 import com.sergiom.data.net.response.ShopDataEntity
 import com.sergiom.data.repository.NetRepository
-import retrofit2.Response
 import javax.inject.Inject
 
 class NetRepositoryImpl @Inject constructor(

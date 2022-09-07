@@ -41,6 +41,7 @@ android {
 dependencies {
 
     implementation 'androidx.core:core-ktx:1.8.0'
+    testImplementation "androidx.arch.core:core-testing:2.1.0"
     implementation 'androidx.appcompat:appcompat:1.5.0'
     implementation 'com.google.android.material:material:1.6.1'
     implementation project(path: ':domain')
@@ -68,6 +69,7 @@ dependencies {
     def coroutines_android_version = '1.3.7'
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:$coroutines_android_version"
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:$coroutines_android_version"
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
 
     //Hilt
     implementation 'com.google.dagger:hilt-android:2.31-alpha'
@@ -92,4 +94,8 @@ dependencies {
 
     //Timber
     implementation 'com.jakewharton.timber:timber:4.7.1'
+
+    //Mockito
+    testImplementation 'org.mockito:mockito-core:4.3.1'
+    testImplementation "org.mockito:mockito-inline:3.11.2"
 }

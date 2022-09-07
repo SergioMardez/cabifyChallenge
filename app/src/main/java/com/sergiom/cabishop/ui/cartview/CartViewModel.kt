@@ -46,8 +46,9 @@ class CartViewModel @Inject constructor(
                 is DataState.Success -> {
                     _discounts.value = result.data
                 }
-                is DataState.Error -> _error.value = result.error.toString()
-                else -> {}
+                is DataState.Error -> {
+                    _error.value = result.error.toString()
+                }
             }
         }
         _loading.value = false
