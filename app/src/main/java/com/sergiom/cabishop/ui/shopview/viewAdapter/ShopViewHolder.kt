@@ -34,7 +34,7 @@ class ShopViewHolder(private val itemBinding: RecyclerLayoutBinding) :
         discounts?.discounts?.forEach {
             if (itemCode == it.itemCode) {
                 itemBinding.promotion.visibility = View.VISIBLE
-                itemBinding.promotion.binding.descriptionText.text = it.text
+                itemBinding.promotion.setPromotion(it)
             }
         }
     }
