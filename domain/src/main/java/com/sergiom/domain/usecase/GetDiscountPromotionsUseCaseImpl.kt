@@ -3,15 +3,16 @@ package com.sergiom.domain.usecase
 import com.sergiom.data.model.DiscountType
 import com.sergiom.data.model.ShopDiscount
 import com.sergiom.data.model.ShopDiscountModel
-import com.sergiom.domain.states.DataState
+import com.sergiom.data.utils.*
 
 interface GetDiscountPromotionsUseCase {
-    suspend operator fun invoke(): DataState<ShopDiscountModel>
+    suspend operator fun invoke(): Either<ShopDiscountModel, String>
 }
 
 class GetDiscountPromotionsUseCaseImpl: GetDiscountPromotionsUseCase {
-    override suspend fun invoke(): DataState<ShopDiscountModel> =
-        DataState.Success(getDiscounts())
+    override suspend fun invoke(): Either<ShopDiscountModel, String> {
+        return eitherSuccess(getDiscounts())
+    }
 }
 
 private fun getDiscounts(): ShopDiscountModel = ShopDiscountModel(

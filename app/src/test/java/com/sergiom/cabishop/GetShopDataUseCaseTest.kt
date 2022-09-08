@@ -7,20 +7,20 @@ import com.sergiom.data.model.ShopDataModel
 import com.sergiom.data.net.Api
 import com.sergiom.data.net.response.ShopDataEntity
 import com.sergiom.data.repository.NetRepository
-import com.sergiom.domain.states.DataState
+import com.sergiom.data.utils.Either
+import com.sergiom.data.utils.eitherSuccess
+import com.sergiom.data.utils.onFailure
+import com.sergiom.data.utils.onSuccess
 import com.sergiom.domain.usecase.GetShopDataUseCase
 import com.sergiom.domain.usecase.GetShopDataUseCaseImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
-import org.mockito.BDDMockito
-import org.mockito.BDDMockito.given
 import org.mockito.Mock
 import org.mockito.Mockito
 import org.mockito.junit.MockitoJUnitRunner
 import retrofit2.Response
-import java.lang.Exception
 
 @RunWith(MockitoJUnitRunner::class)
 class GetShopDataUseCaseTest {
@@ -37,9 +37,6 @@ class GetShopDataUseCaseTest {
     @Mock
     lateinit var mockResponse: Response<ShopDataEntity>
 
-    @Mock
-    lateinit var mapper: Mapper<ShopDataEntity, ShopDataModel>
-
     @Before
     fun setup() {
         mockShopItems = Gson().fromJson(products, ShopDataModel::class.java)
@@ -47,37 +44,28 @@ class GetShopDataUseCaseTest {
     }
 
     @Test
-    fun `get data and success`()  {
+    fun `get net data and success`()  {
         runBlocking {
-            Mockito.`when`(mockNetRepo.getCabiShopData()).thenReturn(mockShopItems)
-            assert(useCaseToTest() is DataState.Success)
-            when (val result = useCaseToTest.invoke()) {
-                is DataState.Success -> {
-                    assert(result.data.products.isNotEmpty())
-                    assert(result.data.products.size == 3)
-                    assert(result.data.products.first().name == "Cabify Voucher")
-                }
-                else -> {}
+            Mockito.`when`(mockNetRepo.getCabiShopData()).thenReturn(eitherSuccess(mockShopItems))
+            assert(useCaseToTest() is Either.Success)
+            useCaseToTest.invoke().onSuccess {
+                assert(it.products.isNotEmpty())
+                assert(it.products.size == 3)
+                assert(it.products.first().name == "Cabify Voucher")
             }
         }
     }
 
+    //This last test is like the one in DataSourceTest `get data and fail`, just made it in a
+    // different way. It has unnecessary stubbungs, but to test a bit more this function
     @Test
     fun `get data and fail`()  {
         runBlocking {
             Mockito.`when`(mockResponse.isSuccessful).thenReturn(false)
             Mockito.`when`(api.getProducts()).thenReturn(mockResponse)
-            Mockito.`when`(mockNetRepo.getCabiShopData()).thenAnswer {
-                runBlocking {
-                   return@runBlocking mapper.map(api.getProducts().errorsHandle())
-                }
-            }
-            assert(useCaseToTest() is DataState.Error)
-            when (val result = useCaseToTest.invoke()) {
-                is DataState.Error -> {
-                    assert(result.error.toString() == "java.lang.Exception")
-                }
-                else -> {}
+            assert(useCaseToTest() is Either.Failure)
+            useCaseToTest.invoke().onFailure {
+                assert(it.isNotEmpty())
             }
         }
     }

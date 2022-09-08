@@ -9,6 +9,9 @@ import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sergiom.cabishop.R
@@ -19,6 +22,8 @@ import com.sergiom.cabishop.utils.autoCleared
 import com.sergiom.data.model.ShopDiscountModel
 import com.sergiom.data.model.ShopModel
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * A simple [Fragment] subclass.
@@ -51,27 +56,27 @@ class ShopFragment : Fragment(), ShopViewAdapter.AddToCartListener {
     }
 
     private fun setListeners() {
-        viewModel.loading.observe(viewLifecycleOwner) {
-            binding.cabiImage.isVisible = it
-        }
-
-        viewModel.shopData.observe(viewLifecycleOwner) {
-            it?.let {
-                adapter.setItems(it, promotions)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collectLatest {
+                    it.shopItem?.let { shopItems ->
+                        adapter.setItems(shopItems, promotions)
+                    }
+                    it.cart.observe(viewLifecycleOwner) { cart ->
+                        binding.buttonCart.setNumOfItems(cart.size)
+                    }
+                    it.discounts?.let { sales ->
+                        promotions = sales
+                    }
+                    it.loading.let { isVisible ->
+                        binding.cabiImage.isVisible = isVisible
+                    }
+                    it.error?.let { error ->
+                        binding.errText.visibility = View.VISIBLE
+                        Toast.makeText(context, "ERROR: $error", Toast.LENGTH_LONG).show()
+                    }
+                }
             }
-        }
-
-        viewModel.error.observe(viewLifecycleOwner) {
-            binding.errText.visibility = View.VISIBLE
-            Toast.makeText(context, "ERROR: $it", Toast.LENGTH_LONG).show()
-        }
-
-        viewModel.cart.observe(viewLifecycleOwner) {
-            binding.buttonCart.setNumOfItems(it.size)
-        }
-
-        viewModel.discounts.observe(viewLifecycleOwner) {
-            promotions = it
         }
     }
 

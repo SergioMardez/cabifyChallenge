@@ -7,6 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.sergiom.cabishop.R
 import com.sergiom.cabishop.databinding.FragmentCartBinding
@@ -15,6 +18,8 @@ import com.sergiom.cabishop.utils.autoCleared
 import com.sergiom.data.model.ShopDiscountModel
 import com.sergiom.data.model.ShopItemDataBase
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * A simple [Fragment] subclass.
@@ -42,7 +47,7 @@ class CartFragment : Fragment(), CartViewAdapter.DeleteFromCartListener {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setListeners()
+        setListener()
         setupRecyclerView()
         setButtons()
     }
@@ -56,31 +61,35 @@ class CartFragment : Fragment(), CartViewAdapter.DeleteFromCartListener {
         }
     }
 
-    private fun setListeners() {
-        viewModel.loading.observe(viewLifecycleOwner) { isVisible ->
-            (if (isVisible) View.VISIBLE else View.GONE).also { binding.loader.visibility = it }
-        }
-
-        viewModel.discounts.observe(viewLifecycleOwner) {
-            it?.let {
-               discounts = it
+    private fun setListener() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.state.collectLatest {
+                    it.cart.observe(viewLifecycleOwner) { cart ->
+                        if (cart.isEmpty() && shopFinish.not()) setCartView(true)
+                        discounts?.let { discounts ->
+                            adapter.setItems(cart, discounts)
+                        }
+                    }
+                    it.discounts?.let { sale ->
+                        discounts = sale
+                    }
+                    it.loading.let { isVisible ->
+                        (if (isVisible) View.VISIBLE else View.GONE).also { visibility ->
+                            binding.loader.visibility = visibility
+                        }
+                    }
+                    it.error?.let { error ->
+                        Toast.makeText(context, "ERROR: $error", Toast.LENGTH_LONG).show()
+                    }
+                    it.finishView.let { finished ->
+                        if (finished) {
+                            shopFinish = true
+                            setCartView(false)
+                        }
+                    }
+                }
             }
-        }
-
-        viewModel.error.observe(viewLifecycleOwner) {
-            Toast.makeText(context, "ERROR: $it", Toast.LENGTH_LONG).show()
-        }
-
-        viewModel.cart.observe(viewLifecycleOwner) {
-            if (it.isEmpty() && shopFinish.not()) setCartView(true)
-            discounts?.let { discounts ->
-                adapter.setItems(it, discounts)
-            }
-        }
-
-        viewModel.finishView.observe(viewLifecycleOwner) {
-            shopFinish = true
-            setCartView(false)
         }
     }
 
