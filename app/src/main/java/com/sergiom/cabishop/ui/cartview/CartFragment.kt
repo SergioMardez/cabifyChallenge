@@ -1,6 +1,8 @@
 package com.sergiom.cabishop.ui.cartview
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -35,6 +37,7 @@ class CartFragment : Fragment(), CartViewAdapter.DeleteFromCartListener {
     private var discounts: ShopDiscountModel? = null
     private lateinit var adapter: CartViewAdapter
     private var shopFinish = false
+    private var handler: Handler = Handler(Looper.getMainLooper())
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
@@ -52,9 +55,14 @@ class CartFragment : Fragment(), CartViewAdapter.DeleteFromCartListener {
         setButtons()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
+    }
+
     private fun setButtons() {
         binding.backButton.setOnClickListener {
-            parentFragmentManager.popBackStack()
+            goToPreviousFragment()
         }
         binding.payButton.setOnClickListener {
             viewModel.finishOrder()
@@ -114,9 +122,18 @@ class CartFragment : Fragment(), CartViewAdapter.DeleteFromCartListener {
             binding.thanksText.text = getString(R.string.cart_empty_text)
         } else {
             binding.thanksText.text = getString(R.string.cart_view_end_text)
+            handler.apply {
+                postDelayed({
+                    goToPreviousFragment()
+                }, 1000)
+            }
         }
         binding.mainView.visibility = View.GONE
         binding.thanksText.visibility = View.VISIBLE
+    }
+
+    private fun goToPreviousFragment() {
+        parentFragmentManager.popBackStack()
     }
 
     companion object {
