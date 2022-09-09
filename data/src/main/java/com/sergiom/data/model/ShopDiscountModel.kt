@@ -8,10 +8,6 @@ data class ShopDiscount(
     val itemCode: String,
     val numOfItems: Int,
     val price: Double,
-    val type: DiscountType,
+    val itemsToApply: Int,
     val text: String
 )
-
-enum class DiscountType {
-    TWOFORONE, ORMORE
-}

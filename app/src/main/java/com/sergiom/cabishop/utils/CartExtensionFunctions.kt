@@ -10,22 +10,11 @@ fun List<ShopItemDataBase>.setDiscount(discount: ShopDiscountModel): List<CartAd
     forEach { shopItemDataBase ->
         discount.discounts.forEach { shopDiscount ->
             if (shopDiscount.itemCode == shopItemDataBase.code) {
-                when (shopDiscount.type) {
-                    DiscountType.TWOFORONE -> {
-                        hasDiscount = true
-                        cartAdapterItems.add(createCartAdapterList(
-                            shopItem = shopItemDataBase,
-                            shopDiscount = shopDiscount
-                        ))
-                    }
-                    DiscountType.ORMORE -> {
-                        hasDiscount = true
-                        cartAdapterItems.add(createCartAdapterList(
-                            shopItem = shopItemDataBase,
-                            shopDiscount = shopDiscount
-                        ))
-                    }
-                }
+                hasDiscount = true
+                cartAdapterItems.add(createCartAdapterList(
+                    shopItem = shopItemDataBase,
+                    shopDiscount = shopDiscount
+                ))
             }
         }
         if (hasDiscount.not()) {
@@ -39,23 +28,12 @@ fun List<ShopItemDataBase>.setDiscount(discount: ShopDiscountModel): List<CartAd
         var numItemsOnDiscount = 0
         forEach { shopItemDataBase ->
             if (shopDiscount.itemCode == shopItemDataBase.code) {
-                when (shopDiscount.type) {
-                    DiscountType.TWOFORONE -> {
-                        numItemsOnDiscount++
-                        if (numItemsOnDiscount == shopDiscount.numOfItems) {
-                            cartDiscount.addAll(applyDiscount(cartAdapterItems, shopDiscount))
-                            hasDiscount = true
-                        }
-                    }
-                    DiscountType.ORMORE -> {
-                        numItemsOnDiscount++
-                        if (numItemsOnDiscount == shopDiscount.numOfItems) {
-                            cartDiscount.addAll(applyDiscount(cartAdapterItems, shopDiscount))
-                            hasDiscount = true
-                        }
-                    }
-                }
+                numItemsOnDiscount++
             }
+        }
+        if (numItemsOnDiscount >= shopDiscount.numOfItems) {
+            cartDiscount.addAll(applyDiscount(cartAdapterItems, shopDiscount, numItemsOnDiscount))
+            hasDiscount = true
         }
         if (hasDiscount) {
             cartAdapterItems.clear()
@@ -68,33 +46,20 @@ fun List<ShopItemDataBase>.setDiscount(discount: ShopDiscountModel): List<CartAd
     return cartAdapterItems
 }
 
-private fun applyDiscount(list: List<CartAdapterItem>, shopDiscount: ShopDiscount): List<CartAdapterItem> {
+private fun applyDiscount(list: List<CartAdapterItem>, shopDiscount: ShopDiscount, itemsOnDiscount: Int): List<CartAdapterItem> {
     val cartAdapterItem = mutableListOf<CartAdapterItem>()
-    var itemsDiscount = 0
+    var itemsDiscount = (itemsOnDiscount * (shopDiscount.itemsToApply.toDouble()/100)).toInt()
 
     list.forEach {
-        when (shopDiscount.type) {
-            DiscountType.TWOFORONE -> {
-                if (shopDiscount.itemCode == it.code) {
-                    itemsDiscount++
-                    if (itemsDiscount == shopDiscount.numOfItems) {
-                        itemsDiscount = 0
-                        cartAdapterItem.add(addCartAdapterItem(it, shopDiscount, true))
-                    } else {
-                        cartAdapterItem.add(addCartAdapterItem(it, shopDiscount, false))
-                    }
-                } else {
-                    cartAdapterItem.add(it)
-                }
+        if (shopDiscount.itemCode == it.code) {
+            if (itemsDiscount != 0) {
+                itemsDiscount--
+                cartAdapterItem.add(addCartAdapterItem(it, shopDiscount, true))
+            } else {
+                cartAdapterItem.add(addCartAdapterItem(it, shopDiscount, false))
             }
-            DiscountType.ORMORE -> {
-                if (shopDiscount.itemCode == it.code) {
-                    cartAdapterItem.add(addCartAdapterItem(it, shopDiscount, true))
-                } else {
-                    cartAdapterItem.add(it)
-                }
-            }
-            else -> cartAdapterItem.add(it)
+        } else {
+            cartAdapterItem.add(it)
         }
     }
 
